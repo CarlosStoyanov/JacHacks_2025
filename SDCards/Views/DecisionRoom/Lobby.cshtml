@@ -9,9 +9,19 @@
 
     <div class="text-center mt-4">
         <h3>Invite Link:</h3>
-        <input class="invite-link" readonly
-               value="@($"https://sdcards.us/DecisionRoom/Join?roomId={Model.Id}")"/>
+
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input id="inviteLink" class="invite-link" readonly
+                       value="@($"https://sdcards.us/DecisionRoom/Join?roomId={Model.Id}")"
+                       style="width: 350px; text-align: center;"/>
+                <button id="copyButton" class="btn btn-primary">Copy</button>
+            </div>
+
+            <div id="qrcode"></div>
+        </div>
     </div>
+
 
     <div class="add-answer-form">
         <form id="addAnswerForm">
@@ -157,4 +167,33 @@
         startSignalR();
 
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
+    <script>
+        document.getElementById("copyButton").addEventListener("click", function() {
+            const link = document.getElementById("inviteLink");
+            const copyButton = document.getElementById("copyButton");
+
+            link.select();
+            link.setSelectionRange(0, 99999); // For mobile
+            document.execCommand("copy");
+
+            // Change button text to "Copied ✅"
+            const originalText = copyButton.textContent;
+            copyButton.textContent = "Copied ✅";
+
+            // After 2 seconds, return to original
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+            }, 2000);
+        });
+
+        // Generate the QR code
+        const qrcode = new QRCode(document.getElementById("qrcode"), {
+            text: document.getElementById("inviteLink").value,
+            width: 150,
+            height: 150,
+        });
+    </script>
+
 }
