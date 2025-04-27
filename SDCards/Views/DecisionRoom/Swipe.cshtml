@@ -179,6 +179,8 @@
         await connection.start();
         console.log("SignalR connected");
         
+        await connection.invoke("JoinRoom", roomId, "SwipingUser");
+        
         connection.on("ResultsReady", (roomId) => {
           window.location.href = `/DecisionRoom/Results?roomId=${roomId}`;
         });
