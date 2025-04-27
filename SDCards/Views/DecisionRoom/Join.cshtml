@@ -1,0 +1,19 @@
+﻿@model SDCards.Models.DecisionRoom
+@{
+    ViewBag.Title = "Join Room";
+}
+
+<div class="join-room-container">
+    <h1 class="join-title">@Model.Question</h1>
+
+    <form asp-controller="DecisionRoom" asp-action="Join" method="post" class="join-form">
+        <input type="hidden" name="roomId" value="@Model.Id" />
+
+        <div class="form-group">
+            <label for="usernameInput" class="form-label">Enter your username:</label>
+            <input type="text" name="username" id="usernameInput" class="form-input text-center" placeholder="Your Name..." required />
+        </div>
+
+        <button class="submit-btn mt-3" type="submit">Join Room</button>
+    </form>
+</div>

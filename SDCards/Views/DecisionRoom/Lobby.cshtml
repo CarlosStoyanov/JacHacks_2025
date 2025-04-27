@@ -1,0 +1,160 @@
+﻿@model SDCards.Models.DecisionRoom
+@{
+    var currentUsername = Context.Session.GetString("Username");
+    ViewBag.Title = "Lobby";
+}
+
+<div class="lobby-container">
+    <h1 class="lobby-title">@Model.Question</h1>
+
+    <div class="text-center mt-4">
+        <h3>Invite Link:</h3>
+        <input class="invite-link" readonly
+               value="@($"https://sdcards.us/DecisionRoom/Join?roomId={Model.Id}")"/>
+    </div>
+
+    <div class="add-answer-form">
+        <form id="addAnswerForm">
+            <div class="input-group">
+                <input type="text" id="answerInput" placeholder="Type an answer..." required/>
+                <button id="addAnswerButton" class="btn btn-success" type="submit">Add</button>
+            </div>
+        </form>
+
+        <ul class="list-group" id="answersList">
+            @foreach (var card in Model.Cards)
+            {
+                <li class="list-group-item" data-username="@card.Username">@card.Title</li>
+            }
+        </ul>
+    </div>
+
+    <div class="mt-5">
+        <h4>Participants:</h4>
+        <ul class="list-group" id="participantsList">
+            @foreach (var participant in Model.Participants)
+            {
+                <li class="list-group-item">@participant.Username</li>
+            }
+        </ul>
+    </div>
+
+    <div class="text-center">
+        <button class="start-activity-btn" id="startActivityBtn" style="display: none;">Start Activity</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+    <script>
+        const maxAnswersPerPerson = @Model.MaxAnswersPerPerson;
+        let roomId = "@Model.Id";
+        let currentUsername = "@currentUsername";
+        let connection;
+
+        async function startSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/swipeHub")
+                .build();
+
+            connection.on("RoomInfo", (roomInfo) => {
+                if (roomInfo.CreatorUsername === currentUsername) {
+                    document.getElementById("startActivityBtn").style.display = "inline-block";
+                }
+            });
+
+            connection.on("UserJoined", (username) => {
+                const li = document.createElement('li');
+                li.className = "list-group-item";
+                li.textContent = username;
+                document.getElementById("participantsList").appendChild(li);
+            });
+
+            connection.on("AnswerAdded", (payload) => {
+                let text;
+                let username = currentUsername; // Default if not provided
+
+                if (typeof payload === 'object') {
+                    text = payload.title || payload.Title || payload.answerText || JSON.stringify(payload);
+                    if (payload.username || payload.Username) {
+                        username = payload.username || payload.Username;
+                    }
+                } else {
+                    text = payload;
+                }
+
+                const li = document.createElement('li');
+                li.className = "list-group-item";
+                li.textContent = text;
+                li.setAttribute("data-username", username); // NEW
+                document.getElementById("answersList").appendChild(li);
+
+                updateAddButton();
+                updateStartButton();
+            });
+
+            function updateStartButton() {
+                const answerCount = document.querySelectorAll("#answersList li").length;
+                const startBtn = document.getElementById("startActivityBtn");
+
+                if (answerCount >= 2) {
+                    startBtn.disabled = false;
+                } else {
+                    startBtn.disabled = true;
+                }
+            }
+
+            function updateAddButton() {
+                const userCards = Array.from(document.querySelectorAll("#answersList li"))
+                    .filter(li => li.getAttribute("data-username") === currentUsername);
+
+                const addButton = document.getElementById("addAnswerButton");
+
+                if (currentUsername === "@Model.CreatorUsername") {
+                    // Creator can always add
+                    addButton.disabled = false;
+                } else {
+                    if (userCards.length >= maxAnswersPerPerson) {
+                        addButton.disabled = true;
+                    } else {
+                        addButton.disabled = false;
+                    }
+                }
+            }
+
+            connection.on("ActivityStarted", (roomId) => {
+                window.location.href = "/DecisionRoom/Swipe?roomId=" + roomId;
+            });
+
+            try {
+                await connection.start();
+                console.log("SignalR Connected. Connection ID: ", connection.connectionId);
+
+                await connection.invoke("JoinRoom", roomId, currentUsername);
+
+            } catch (err) {
+                console.error(err);
+                setTimeout(startSignalR, 5000);
+            }
+        }
+
+        document.getElementById("addAnswerForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const answerInput = document.getElementById("answerInput");
+            const answerText = answerInput.value.trim();
+            if (answerText) {
+                await connection.invoke("AddAnswer", roomId, answerText);
+                answerInput.value = "";
+                setTimeout(updateAddButton, 100);
+            }
+        });
+
+        document.getElementById("startActivityBtn").addEventListener("click", async () => {
+            await connection.invoke("StartActivity", roomId);
+        });
+
+        startSignalR();
+
+    </script>
+}

@@ -1,0 +1,202 @@
+﻿@model SDCards.Models.DecisionRoom
+@{
+  var timeLimitSeconds = Model.TimeLimitSeconds;
+  var roomCreatedAtUtc = Model.RoomCreatedAtUtc;
+}
+
+<div class="container text-center mt-5">
+  <h1 class="question-title">@Model.Question</h1>
+
+  <div id="cardArea" class="mt-4">
+    @foreach (var card in Model.Cards
+                  .Where(c => !string.IsNullOrWhiteSpace(c.Title)))
+    {
+      <div class="swipe-card" data-card-id="@card.Id">
+        <div class="image-wrapper">
+          @if (!string.IsNullOrEmpty(card.ImageUrl))
+          {
+            <img src="@card.ImageUrl" alt="@card.Title" class="card-image"/>
+          }
+        </div>
+        <h2 class="card-title">@card.Title</h2>
+      </div>
+    }
+  </div>
+
+  <div class="mt-4 button-group">
+    <button id="swipeLeftBtn" class="btn swipe-left">❌ Nope</button>
+    <button id="swipeRightBtn" class="btn swipe-right">✅ Yes!</button>
+  </div>
+</div>
+
+@section Scripts {
+  @if (Model.TimeLimitSeconds != null)
+  {
+    <script>
+      const timeLimitSeconds = @Model.TimeLimitSeconds;
+      const roomCreatedAtUtc = new Date("@Model.RoomCreatedAtUtc?.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")").getTime();
+      const nowUtc = new Date().getTime();
+      const timePassed = Math.floor((nowUtc - roomCreatedAtUtc) / 1000);
+      let timeRemaining = timeLimitSeconds - timePassed;
+
+      if (timeRemaining <= 0) {
+        window.location.href = '@Url.Action("Results", "DecisionRoom", new { roomId = Model.Id })';
+      }
+
+      function updateTimer() {
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          window.location.href = '@Url.Action("Results", "DecisionRoom", new { roomId = Model.Id })';
+          return;
+        }
+
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+
+        document.getElementById("timer").textContent =
+          `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        timeRemaining--;
+      }
+
+      setInterval(updateTimer, 1000);
+      updateTimer();
+    </script>
+
+    <div id="timer" style="font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align:center;"></div>
+  }
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+  <script>
+    let cards, currentIdx = 0;
+    const roomId = "@Model.Id";
+    let connection;
+
+    let startX = 0, currentX = 0, isDragging = false;
+    let activeCard = null;
+
+    function showCard(i) {
+      cards.forEach(c => {
+        c.style.display = 'none';
+        c.style.transform = 'none'; // reset
+        c.style.transition = 'none'; // no smooth animation yet
+      });
+      if (cards[i]) {
+        cards[i].style.display = 'block';
+      }
+      activeCard = cards[i];
+    }
+
+    async function sendSwipe(cardId, right) {
+      try {
+        await connection.invoke("SendCardSwipe", roomId, cardId, right);
+        console.log("Swipe sent", cardId, right);
+      } catch (err) {
+        console.error("Swipe failed:", err);
+      }
+      
+
+    }
+
+    function completeSwipe(right) {
+      if (!activeCard) return;
+
+      activeCard.style.transition = 'transform 0.5s ease';
+      const flyX = right ? window.innerWidth : -window.innerWidth;
+      activeCard.style.transform = `translateX(${flyX}px) rotate(${right ? 30 : -30}deg)`;
+
+      setTimeout(() => {
+        swipe(right);
+      }, 300); // match animation duration
+    }
+
+    function swipe(right) {
+      if (currentIdx < cards.length) {
+        const cid = cards[currentIdx].dataset.cardId;
+        sendSwipe(cid, right);
+        currentIdx++;
+      }
+      if (currentIdx >= cards.length) {
+        window.location.href = `/DecisionRoom/Results?roomId=${roomId}`;
+      } else {
+        showCard(currentIdx);
+      }
+      
+
+    }
+
+    function handleTouchStart(event) {
+      startX = event.touches[0].clientX;
+      currentX = startX;
+      isDragging = true;
+    }
+
+    function handleTouchMove(event) {
+      if (!isDragging) return;
+      currentX = event.touches[0].clientX;
+      const diffX = currentX - startX;
+
+      if (activeCard) {
+        activeCard.style.transition = 'none'; // immediate move
+        activeCard.style.transform = `translateX(${diffX}px) rotate(${diffX * 0.1}deg)`;
+      }
+      
+
+    }
+
+    function handleTouchEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const diffX = currentX - startX;
+
+      if (Math.abs(diffX) > 100) {
+        completeSwipe(diffX > 0); // right or left
+      } else {
+        // snap back to center
+        if (activeCard) {
+          activeCard.style.transition = 'transform 0.3s ease';
+          activeCard.style.transform = 'translateX(0px) rotate(0deg)';
+        }
+      }
+
+      startX = 0;
+      currentX = 0;
+    }
+
+    async function startSignalR() {
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl("/swipeHub")
+        .build();
+
+      try {
+        await connection.start();
+        console.log("SignalR connected");
+
+        cards = document.querySelectorAll('.swipe-card');
+        showCard(currentIdx);
+
+        document
+          .getElementById("swipeLeftBtn")
+          .addEventListener("click", () => completeSwipe(false));
+        document
+          .getElementById("swipeRightBtn")
+          .addEventListener("click", () => completeSwipe(true));
+
+        const cardArea = document.getElementById('cardArea');
+        cardArea.addEventListener('touchstart', handleTouchStart, false);
+        cardArea.addEventListener('touchmove', handleTouchMove, false);
+        cardArea.addEventListener('touchend', handleTouchEnd, false);
+
+      } catch (err) {
+        console.error("Connection error:", err);
+        setTimeout(startSignalR, 5000);
+      }
+      
+
+    }
+
+    startSignalR();
+
+  </script>
+}

@@ -1,0 +1,12 @@
+{
+  "name": "jachacks_2025",
+  "version": "1.0.0",
+  "description": "Carlos, Seb, Heraj",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

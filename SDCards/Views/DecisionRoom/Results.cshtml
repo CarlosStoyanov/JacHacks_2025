@@ -1,0 +1,39 @@
+﻿@model List<SDCards.Controllers.DecisionRoomController.CardResult>
+
+<div class="results-container">
+    <h1 class="results-title">Results</h1>
+
+    <table class="results-table">
+        <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Answer</th>
+            <th>Right Swipes</th>
+        </tr>
+        </thead>
+        <tbody>
+        @{
+            var rankedCards = Model
+                .OrderByDescending(c => c.RightSwipes)
+                .ToList();
+            int rank = 1;
+        }
+        @foreach (var card in rankedCards)
+        {
+            <tr>
+                <td>@rank</td>
+                <td>@card.CardTitle</td>
+                <td>@card.RightSwipes</td>
+            </tr>
+            rank++;
+        }
+        </tbody>
+    </table>
+
+    <div class="ai-summary-container">
+        <h2>AI Recommendation</h2>
+        <p>@ViewBag.AISummary</p>
+    </div>
+
+    <a href="@Url.Action("CreateRoom", "DecisionRoom")" class="start-another-btn">Start Another Room</a>
+</div>
