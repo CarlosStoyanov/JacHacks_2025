@@ -94,7 +94,7 @@
       } catch (err) {
         console.error("Swipe failed:", err);
       }
-      
+
 
     }
 
@@ -110,19 +110,25 @@
       }, 300); // match animation duration
     }
 
-    function swipe(right) {
+    async function swipe(right) {
       if (currentIdx < cards.length) {
         const cid = cards[currentIdx].dataset.cardId;
-        sendSwipe(cid, right);
+        await sendSwipe(cid, right);
         currentIdx++;
       }
       if (currentIdx >= cards.length) {
-        window.location.href = `/DecisionRoom/Results?roomId=${roomId}`;
+        // FINISHED ALL CARDS
+        console.log("Finished swiping. Waiting for others...");
+
+        // Notify server you're done
+        await connection.invoke("FinishSwiping", roomId);
+
+        // Show waiting modal
+        document.getElementById("waitingModal").classList.remove("hidden");
+
       } else {
         showCard(currentIdx);
       }
-      
-
     }
 
     function handleTouchStart(event) {
@@ -140,7 +146,7 @@
         activeCard.style.transition = 'none'; // immediate move
         activeCard.style.transform = `translateX(${diffX}px) rotate(${diffX * 0.1}deg)`;
       }
-      
+
 
     }
 
@@ -172,6 +178,10 @@
       try {
         await connection.start();
         console.log("SignalR connected");
+        
+        connection.on("ResultsReady", (roomId) => {
+          window.location.href = `/DecisionRoom/Results?roomId=${roomId}`;
+        });
 
         cards = document.querySelectorAll('.swipe-card');
         showCard(currentIdx);
@@ -192,11 +202,47 @@
         console.error("Connection error:", err);
         setTimeout(startSignalR, 5000);
       }
-      
+
 
     }
 
     startSignalR();
 
   </script>
+
+  <!-- Waiting Modal -->
+  <div id="waitingModal" class="waiting-modal hidden">
+    <div class="waiting-content">
+      <h2>Waiting for others to finish...</h2>
+      <p>Please hold on while everyone completes their swipes!</p>
+    </div>
+  </div>
+
+  <style>
+    .waiting-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .waiting-content {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+
 }

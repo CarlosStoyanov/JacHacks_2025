@@ -101,7 +101,6 @@ namespace SDCards.Controllers
                 });
         }
 
-
         public async Task StartActivity(string roomId)
         {
             var room = await _mongo.DecisionRooms.Find(r => r.Id == roomId).FirstOrDefaultAsync();
@@ -117,5 +116,21 @@ namespace SDCards.Controllers
 
             await Clients.Group(roomId).SendAsync("ActivityStarted", roomId);
         }
+        
+        public async Task FinishSwiping(string roomId)
+        {
+            var room = await _mongo.DecisionRooms.Find(r => r.Id == roomId).FirstOrDefaultAsync();
+            if (room == null) return;
+
+            room.FinishedParticipants.Add(Context.ConnectionId); // Track that this user finished
+            await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
+
+            // If everyone finished
+            if (room.Participants.Count == room.FinishedParticipants.Count)
+            {
+                await Clients.Group(roomId).SendAsync("ResultsReady", roomId);
+            }
+        }
+
     }
 }
