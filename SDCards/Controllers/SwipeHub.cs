@@ -120,23 +120,34 @@ namespace SDCards.Controllers
         public async Task FinishSwiping(string roomId)
         {
             var room = await _mongo.DecisionRooms.Find(r => r.Id == roomId).FirstOrDefaultAsync();
-            if (room == null) return;
-
-            // Find the username for this connection
-            var participant = room.Participants.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
-
-            if (participant != null && !room.FinishedParticipants.Contains(participant.Username))
+            if (room == null)
             {
-                room.FinishedParticipants.Add(participant.Username); // ✅ Track by username!
-                await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
+                Console.WriteLine($"Room not found: {roomId}");
+                return;
+            }
 
-                // Check if everyone finished
-                if (room.Participants.Count == room.FinishedParticipants.Count)
-                {
-                    await Clients.Group(roomId).SendAsync("ResultsReady", roomId);
-                }
+            Console.WriteLine($"FinishSwiping called by connection: {Context.ConnectionId}");
+
+            // Save the ConnectionId (as you're doing for now)
+            if (!room.FinishedParticipants.Contains(Context.ConnectionId))
+            {
+                room.FinishedParticipants.Add(Context.ConnectionId);
+                await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
+            }
+
+            Console.WriteLine($"Participants: {room.Participants.Count}, Finished: {room.FinishedParticipants.Count}");
+
+            if (room.Participants.Count == room.FinishedParticipants.Count)
+            {
+                Console.WriteLine("✅ All finished! Sending ResultsReady...");
+                await Clients.Group(roomId).SendAsync("ResultsReady", roomId);
+            }
+            else
+            {
+                Console.WriteLine("⏳ Not all finished yet.");
             }
         }
+
 
 
     }
