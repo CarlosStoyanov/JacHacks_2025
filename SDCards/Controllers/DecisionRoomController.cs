@@ -81,7 +81,7 @@ namespace SDCards.Controllers
                 System.Diagnostics.Debug.WriteLine($"    Id:'{c.Id}'   Title:'{c.Title}'");
             }
             // ——— DEBUG END ———
-
+            ViewBag.CurrentUsername = HttpContext.Session.GetString("Username");
             return View(room);
         }
 

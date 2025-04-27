@@ -117,38 +117,21 @@ namespace SDCards.Controllers
             await Clients.Group(roomId).SendAsync("ActivityStarted", roomId);
         }
         
-        public async Task FinishSwiping(string roomId)
+        public async Task FinishSwiping(string roomId, string username)
         {
             var room = await _mongo.DecisionRooms.Find(r => r.Id == roomId).FirstOrDefaultAsync();
-            if (room == null)
-            {
-                Console.WriteLine($"Room not found: {roomId}");
-                return;
-            }
+            if (room == null) return;
 
-            Console.WriteLine($"FinishSwiping called by connection: {Context.ConnectionId}");
-
-            // Save the ConnectionId (as you're doing for now)
-            if (!room.FinishedParticipants.Contains(Context.ConnectionId))
+            if (!room.FinishedParticipants.Contains(username))
             {
-                room.FinishedParticipants.Add(Context.ConnectionId);
+                room.FinishedParticipants.Add(username); // <-- save username, not connectionId
                 await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
             }
 
-            Console.WriteLine($"Participants: {room.Participants.Count}, Finished: {room.FinishedParticipants.Count}");
-
             if (room.Participants.Count == room.FinishedParticipants.Count)
             {
-                Console.WriteLine("✅ All finished! Sending ResultsReady...");
                 await Clients.Group(roomId).SendAsync("ResultsReady", roomId);
             }
-            else
-            {
-                Console.WriteLine("⏳ Not all finished yet.");
-            }
         }
-
-
-
     }
 }

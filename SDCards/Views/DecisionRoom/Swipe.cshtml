@@ -69,6 +69,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
   <script>
     let cards, currentIdx = 0;
+    const currentUsername = "@ViewBag.Username";
     const roomId = "@Model.Id";
     let connection;
 
@@ -94,8 +95,6 @@
       } catch (err) {
         console.error("Swipe failed:", err);
       }
-
-
     }
 
     function completeSwipe(right) {
@@ -121,7 +120,7 @@
         console.log("Finished swiping. Waiting for others...");
 
         // Notify server you're done
-        await connection.invoke("FinishSwiping", roomId);
+        await connection.invoke("FinishSwiping", roomId, currentUsername);
 
         // Show waiting modal
         document.getElementById("waitingModal").classList.remove("hidden");
@@ -210,6 +209,7 @@
 
     startSignalR();
 
+  
   </script>
 
   <!-- Waiting Modal -->
