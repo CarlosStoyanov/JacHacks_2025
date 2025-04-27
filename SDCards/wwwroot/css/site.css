@@ -388,3 +388,6 @@ body {
   background: linear-gradient(to right, #2563eb, #7e22ce); /* darker hover */
 }
 
+#infoIcon:hover {
+  color: #0a58ca;
+}

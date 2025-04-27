@@ -59,10 +59,7 @@ namespace SDCards.Controllers
         
         public async Task SendCardSwipe(string roomId, string cardId, bool isRightSwipe)
         {
-            // 1) Log the raw inputs
-            Console.WriteLine($"[SwipeHub] 🔔 Called with roomId='{roomId}', cardId='{cardId}', right={isRightSwipe}");
 
-            // 2) Try an explicit ObjectId filter
             var filter = Builders<DecisionRoom>.Filter.Eq("_id", new ObjectId(roomId));
             var swipe = new Swipe
             {
@@ -74,7 +71,6 @@ namespace SDCards.Controllers
 
             // 3) Capture and log the update result
             var result = await _mongo.DecisionRooms.UpdateOneAsync(filter, update);
-            Console.WriteLine($"[SwipeHub] ✅ Matched={result.MatchedCount}, Modified={result.ModifiedCount}");
         }
         
         public async Task AddAnswer(string roomId, string answerText)

@@ -3,19 +3,20 @@
 }
 
 <div class="create-room-container">
-    <img src="~/img/logo.png" alt="Swipe & Decide" class="page-title-img" />
+    <img src="~/img/logo.png" alt="Swipe & Decide" class="page-title-img"/>
 
-    <img src="~/img/cards.png" alt="Cards" class="cards-img breathing" />
+    <img src="~/img/cards.png" alt="Cards" class="cards-img breathing"/>
 
     <form asp-action="CreateRoom" method="post" class="create-room-form">
         <div class="form-group">
             <label for="usernameInput" class="form-label">Enter your name</label>
-            <input type="text" class="form-input" id="usernameInput" name="username" placeholder="Your Name" required />
+            <input type="text" class="form-input" id="usernameInput" name="username" placeholder="Your Name" required/>
         </div>
 
         <div class="form-group">
             <label for="questionInput" class="form-label">What are you trying to decide?</label>
-            <input type="text" class="form-input" id="questionInput" name="question" placeholder="Propose a question" required />
+            <input type="text" class="form-input" id="questionInput" name="question" placeholder="Propose a question"
+                   required/>
         </div>
         <div class="form-group">
             <label for="timeLimitSeconds">Timer (minutes)</label>
@@ -28,9 +29,40 @@
         </div>
         <div class="form-group">
             <label for="maxAnswersPerPerson">Max Answers Per Person</label>
-            <input type="number" class="form-input" id="maxAnswersPerPerson" name="maxAnswersPerPerson" min="1" max="10" value="3" required />
+            <input type="number" class="form-input" id="maxAnswersPerPerson" name="maxAnswersPerPerson" min="1" max="10"
+                   value="3" required/>
         </div>
 
         <button type="submit" class="submit-btn">Create Room</button>
+        <div class="info-container">
+            <h4 style="font-size: 0.9rem; font-weight: normal; color: #0d6efd; text-decoration: underline; cursor: pointer;" id="infoIcon">
+                Get started using SD cards!
+            </h4>
+
+            <div id="infoPopup"
+                 style="display:none; background:white; padding:1rem; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2);">
+                <h4>About Swipe & Decide</h4>
+                <p>Swipe & Decide helps groups <b>make better decisions together</b>.</p>
+                <ul>
+                    <li><b>Create a Room</b>: Ask an open-ended question (e.g., <i>Where should we eat?</i>).</li>
+                    <li><b>Avoid Yes/No Questions</b>: Ask for options, not yes/no!</li>
+                    <li><b>Swipe Together</b>: Vote by swiping right ✅ or left ❌ on each idea!</li>
+                </ul>
+            </div>
+        </div>
     </form>
+
+
 </div>
+
+@section Scripts
+{
+    <script>
+        const infoIcon = document.getElementById("infoIcon");
+        const infoPopup = document.getElementById("infoPopup");
+
+        infoIcon.addEventListener("click", function () {
+            infoPopup.style.display = (infoPopup.style.display === "none" ? "block" : "none");
+        });
+    </script>
+}
