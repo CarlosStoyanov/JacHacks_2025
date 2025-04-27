@@ -122,7 +122,7 @@ namespace SDCards.Controllers
             var room = await _mongo.DecisionRooms.Find(r => r.Id == roomId).FirstOrDefaultAsync();
             if (room == null) return;
 
-            if (!room.FinishedParticipants.Contains(username))
+            if (!string.IsNullOrWhiteSpace(username) && !room.FinishedParticipants.Contains(username))
             {
                 room.FinishedParticipants.Add(username); // <-- save username, not connectionId
                 await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
