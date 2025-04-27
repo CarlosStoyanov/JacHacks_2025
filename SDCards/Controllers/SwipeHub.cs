@@ -122,15 +122,22 @@ namespace SDCards.Controllers
             var room = await _mongo.DecisionRooms.Find(r => r.Id == roomId).FirstOrDefaultAsync();
             if (room == null) return;
 
-            room.FinishedParticipants.Add(Context.ConnectionId); // Track that this user finished
-            await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
+            // Find the username for this connection
+            var participant = room.Participants.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
 
-            // If everyone finished
-            if (room.Participants.Count == room.FinishedParticipants.Count)
+            if (participant != null && !room.FinishedParticipants.Contains(participant.Username))
             {
-                await Clients.Group(roomId).SendAsync("ResultsReady", roomId);
+                room.FinishedParticipants.Add(participant.Username); // ✅ Track by username!
+                await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
+
+                // Check if everyone finished
+                if (room.Participants.Count == room.FinishedParticipants.Count)
+                {
+                    await Clients.Group(roomId).SendAsync("ResultsReady", roomId);
+                }
             }
         }
+
 
     }
 }
