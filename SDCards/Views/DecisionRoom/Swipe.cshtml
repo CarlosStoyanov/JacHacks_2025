@@ -178,7 +178,7 @@
         console.log("SignalR connected");
         
         var currentUsername = "@currentUsername";
-        await connection.invoke("JoinRoom", roomId, "currentUsername");
+        await connection.invoke("JoinRoom", roomId, currentUsername);
 
         connection.on("ResultsReady", function (roomId) {
           console.log("✅ Results are ready! Redirecting...");
