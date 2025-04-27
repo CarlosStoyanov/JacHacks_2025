@@ -137,16 +137,16 @@ namespace SDCards.Controllers
             var answersFormatted = string.Join("\n", cardVotes.Select(cv =>
                 $"Answer: {cv.CardTitle}, Right Swipes: {cv.RightSwipes}, Left Swipes: {cv.LeftSwipes}"));
 
-            var prompt = $"Given the following question: '{question}' and these answers with their swipe results:\n{answersFormatted}\n\nPropose a recommendation to the user on what to pick or how to decide, in a helpful but concise paragraph.";
+            var prompt = $"Given the following question: '{question}' and these answers with their swipe results:\n{answersFormatted}\n\nPropose a recommendation to the user on what to pick or how to decide, in a helpful but concise paragraph. Be a unique personality who is a professional recommender who takes pride in making CLEAR AND DECISIVE decisions for others propose a creative, CLEAR, and interest resolution, keep all outputs between 2-3 clear and concise sentences.";
 
             var completionResult = await service.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
             {
                 Messages = new List<ChatMessage>
                 {
-                    ChatMessage.FromSystem("You are an assistant who helps summarize and recommend choices."),
+                    ChatMessage.FromSystem("You are a professional decision-maker with an optimistic character who helps summarize and recommend choices."),
                     ChatMessage.FromUser(prompt)
                 },
-                Model = OpenAI.ObjectModels.Models.Gpt_3_5_Turbo // <== fixed here
+                Model = OpenAI.ObjectModels.Models.Gpt_4 // <== fixed here
             });
 
             Console.WriteLine($"Completion successful? {completionResult.Successful}");
