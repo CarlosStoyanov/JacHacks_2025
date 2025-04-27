@@ -128,7 +128,7 @@ namespace SDCards.Controllers
 
         private async Task<string> GenerateSummary(string question, List<CardResult> cardVotes)
         {
-            var apiKey = "";
+            var apiKey = Environment.GetEnvironmentVariable("API_KEY");
             var service = new OpenAIService(new OpenAiOptions()
             {
                 ApiKey = apiKey

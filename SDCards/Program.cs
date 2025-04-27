@@ -2,6 +2,7 @@ using SDCards.Controllers;
 using SDCards.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+DotNetEnv.Env.Load();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -12,6 +13,7 @@ builder.Services.AddSignalR()
     });
 builder.Services.AddDistributedMemoryCache(); 
 builder.Services.AddSession();
+DotNetEnv.Env.Load();
 
 var app = builder.Build();
 
