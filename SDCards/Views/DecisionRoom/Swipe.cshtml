@@ -179,11 +179,12 @@
         console.log("SignalR connected");
         
         await connection.invoke("JoinRoom", roomId, "SwipingUser");
-        
-        connection.on("ResultsReady", (roomId) => {
+
+        connection.on("ResultsReady", function (roomId) {
+          console.log("✅ Results are ready! Redirecting...");
           window.location.href = `/DecisionRoom/Results?roomId=${roomId}`;
         });
-
+        
         cards = document.querySelectorAll('.swipe-card');
         showCard(currentIdx);
 
