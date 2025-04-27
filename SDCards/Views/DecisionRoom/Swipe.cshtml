@@ -144,11 +144,9 @@
       const diffX = currentX - startX;
 
       if (activeCard) {
-        activeCard.style.transition = 'none'; // immediate move
+        activeCard.style.transition = 'none'; 
         activeCard.style.transform = `translateX(${diffX}px) rotate(${diffX * 0.1}deg)`;
       }
-
-
     }
 
     function handleTouchEnd() {
@@ -158,9 +156,8 @@
       const diffX = currentX - startX;
 
       if (Math.abs(diffX) > 100) {
-        completeSwipe(diffX > 0); // right or left
+        completeSwipe(diffX > 0);
       } else {
-        // snap back to center
         if (activeCard) {
           activeCard.style.transition = 'transform 0.3s ease';
           activeCard.style.transform = 'translateX(0px) rotate(0deg)';
@@ -180,7 +177,8 @@
         await connection.start();
         console.log("SignalR connected");
         
-        await connection.invoke("JoinRoom", roomId, "SwipingUser");
+        var currentUsername = "@currentUsername";
+        await connection.invoke("JoinRoom", roomId, "currentUsername");
 
         connection.on("ResultsReady", function (roomId) {
           console.log("✅ Results are ready! Redirecting...");

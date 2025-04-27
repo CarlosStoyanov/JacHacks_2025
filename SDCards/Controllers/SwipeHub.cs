@@ -110,7 +110,7 @@ namespace SDCards.Controllers
                 return;
 
             room.IsActive = true;
-            room.Cards = room.Cards.Where(c => !string.IsNullOrWhiteSpace(c.Title)).ToList(); // ✅ Remove blanks
+            room.Cards = room.Cards.Where(c => !string.IsNullOrWhiteSpace(c.Title)).ToList();
 
             await _mongo.DecisionRooms.ReplaceOneAsync(r => r.Id == roomId, room);
 
